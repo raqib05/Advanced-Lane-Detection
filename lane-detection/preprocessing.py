@@ -12,8 +12,8 @@ def perspective_warp(img_path):
     ])
     img_size = np.float32([(img.shape[1],img.shape[0])])
     src = src*img_size
-    for p in src:
-        cv2.circle(img, tuple(p.astype(int)), 6, (0, 0, 255), -1)
+    # for p in src:
+    #     cv2.circle(img, tuple(p.astype(int)), 6, (0, 0, 255), -1)
 
     img_size = (int(img_size[0][0]), int(img_size[0][1]))
     dst = np.float32([
@@ -38,8 +38,19 @@ def edge_detection(img_path):
     # cv2.imshow("birds eye", edges)
     # cv2.waitKey(0)
 
+    birds_eye = cv2.imread(img_path)
+    hls = cv2.cvtColor(birds_eye, cv2.COLOR_BGR2HLS)
+    l = hls[:, :, 1]
+    s = hls[:, :, 2]
 
-# perspective_warp("../data/lane5.png")
-# edge_detection("../data/birds_eye.png")
+    _, l_binary = cv2.threshold(l, 200, 255, cv2.THRESH_BINARY)
+    _, s_binary = cv2.threshold(s, 120, 255, cv2.THRESH_BINARY)
+    combined = np.zeros_like(edges)
+    combined[(edges > 0) | (s_binary > 0)] = 255
+    cv2.imshow("birds eye", combined)
+    cv2.waitKey(0)
+
+perspective_warp("../data/lane5.png")
+edge_detection("../data/birds_eye.png")
 
 # perspective_warp("../data/lane3.png")
