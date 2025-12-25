@@ -24,10 +24,10 @@ def perspective_warp(img_path):
     ])
     t_matrix = cv2.getPerspectiveTransform(src, dst)
     birds_eye = cv2.warpPerspective(img, t_matrix, img_size)
-    cv2.imshow("test", img)
-    cv2.imshow("birds eye", birds_eye)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-  
+    # cv2.imshow("test", img)
+    # cv2.imshow("birds eye", birds_eye)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    return birds_eye
 
-perspective_warp("../data/lane3.png")
+# perspective_warp("../data/lane3.png")
