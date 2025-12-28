@@ -165,8 +165,8 @@ def polynomial_fit(t_matrix):
     ptsL = np.array([np.transpose(left_coords)], dtype=np.int32)
     ptsR = np.array([np.transpose(right_coords)], dtype=np.int32)
 
-    cv2.polylines(out_img, [ptsL], isClosed=False, color=(255,0,0), thickness=3, lineType=cv2.LINE_AA)
-    cv2.polylines(out_img, [ptsR], isClosed=False, color=(255,0,0), thickness=3, lineType=cv2.LINE_AA)
+    cv2.polylines(out_img, [ptsL], isClosed=False, color=(255,0,0), thickness=6, lineType=cv2.LINE_AA)
+    cv2.polylines(out_img, [ptsR], isClosed=False, color=(255,0,0), thickness=6, lineType=cv2.LINE_AA)
 
     cv2.imwrite("../data/polynomial_fit.png", out_img)
 
@@ -178,7 +178,7 @@ def overlay():
     lanes = cv2.imread("../data/lane_fit.png")
     og_img = cv2.imread("../data/lane5.png")
     og_img = cv2.resize(og_img, (960, 540))
-    
+
     lanes_hsv = cv2.cvtColor(lanes, cv2.COLOR_BGR2HSV)
     lower_blue = np.array([100, 150, 50])
     upper_blue = np.array([130, 255, 255])
@@ -188,8 +188,9 @@ def overlay():
     ys, xs = replace
     overlay = og_img.copy()
     overlay[ys,xs] = (255,0,0)
-    cv2.imshow("lanes", overlay)
-    cv2.waitKey(0)
+    cv2.imwrite("../data/lane_final.png", overlay)
+    # cv2.imshow("lanes", overlay)
+    # cv2.waitKey(0)
 
 _,_, t_matrix = perspective_warp("../data/lane5.png")
 edge_detection("../data/birds_eye.png")
