@@ -96,21 +96,21 @@ def sliding_window(img_path):
         win_xright_low  = max(rightx_current - margin, 0)
         win_xright_high = min(rightx_current + margin, W)
 
-        cv2.rectangle(
-            out_img,
-            (win_xleft_low, win_y_low),
-            (win_xleft_high, win_y_high),
-            (0, 255, 255),
-            2
-        )
+        # cv2.rectangle(
+        #     out_img,
+        #     (win_xleft_low, win_y_low),
+        #     (win_xleft_high, win_y_high),
+        #     (0, 255, 255),
+        #     2
+        # )
 
-        cv2.rectangle(
-            out_img,
-            (win_xright_low, win_y_low),
-            (win_xright_high, win_y_high),
-            (0, 255, 255),
-            2
-        )
+        # cv2.rectangle(
+        #     out_img,
+        #     (win_xright_low, win_y_low),
+        #     (win_xright_high, win_y_high),
+        #     (0, 255, 255),
+        #     2
+        # )
         good_left_inds = (
             (nonzeroy >= win_y_low) &
             (nonzeroy <  win_y_high) &
@@ -172,15 +172,30 @@ def polynomial_fit(t_matrix):
 
     img_size = (out_img.shape[1], out_img.shape[0])
     reverse_warp = cv2.warpPerspective(out_img, t_matrix, img_size)
-    cv2.imshow("lanes", reverse_warp)
-    cv2.waitKey(0)
+    cv2.imwrite("../data/lane_fit.png", reverse_warp)
 
+def overlay():
+    lanes = cv2.imread("../data/lane_fit.png")
+    og_img = cv2.imread("../data/lane5.png")
+    og_img = cv2.resize(og_img, (960, 540))
     
+    lanes_hsv = cv2.cvtColor(lanes, cv2.COLOR_BGR2HSV)
+    lower_blue = np.array([100, 150, 50])
+    upper_blue = np.array([130, 255, 255])
+    lane_mask = cv2.inRange(lanes_hsv, lower_blue, upper_blue)
+
+    replace = np.where(lane_mask > 0)
+    ys, xs = replace
+    overlay = og_img.copy()
+    overlay[ys,xs] = (255,0,0)
+    cv2.imshow("lanes", overlay)
+    cv2.waitKey(0)
 
 _,_, t_matrix = perspective_warp("../data/lane5.png")
 edge_detection("../data/birds_eye.png")
 polynomial_fit(t_matrix)
-leftx, lefty, rightx, righty, ans = sliding_window("../data/edges.png")
+overlay()
+# leftx, lefty, rightx, righty, ans = sliding_window("../data/edges.png")
 
 # cv2.imshow("sliding window", ans)
 # cv2.waitKey(0)
