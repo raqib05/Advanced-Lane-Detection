@@ -2,9 +2,8 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
-def perspective_warp(img_path):
-    img = cv2.imread(img_path)
-    img = cv2.resize(img, (960, 540))
+
+def homography_matrix(img):
     src = np.float32([
         (0.41, 0.65),  # top-left
         (0.19, 0.9),  # bottom-left
@@ -24,24 +23,27 @@ def perspective_warp(img_path):
         [img_size[0], img_size[1]]
     ])
     t_matrix = cv2.getPerspectiveTransform(src, dst)
-    birds_eye = cv2.warpPerspective(img, t_matrix, img_size)
-    cv2.imwrite("../data/birds_eye.png", birds_eye)
-
     inverse_t = cv2.getPerspectiveTransform(dst, src)
+    return t_matrix, inverse_t
+
+def perspective_warp(t_matrix, img):
+    img_size = np.float32([(img.shape[1],img.shape[0])])
+    img_size = (int(img_size[0][0]), int(img_size[0][1]))
+    birds_eye = cv2.warpPerspective(img, t_matrix, img_size)
+    # cv2.imwrite("../data/birds_eye.png", birds_eye)
     # cv2.imwrite("../data/coords.png", img)
     # cv2.imshow("test", img)
     # cv2.imshow("birds eye", birds_eye)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
-    return birds_eye, t_matrix, inverse_t
+    return birds_eye
 
-def edge_detection(img_path):
-    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+def edge_detection(img):
+    birds_eye = img.copy()
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(img, 30, 60)
     # cv2.imshow("birds eye", edges)
     # cv2.waitKey(0)
-
-    birds_eye = cv2.imread(img_path)
     hls = cv2.cvtColor(birds_eye, cv2.COLOR_BGR2HLS)
     l = hls[:, :, 1]
     s = hls[:, :, 2]
@@ -50,12 +52,13 @@ def edge_detection(img_path):
     _, s_binary = cv2.threshold(s, 120, 255, cv2.THRESH_BINARY)
     combined = np.zeros_like(edges)
     combined[(edges > 0) | (s_binary > 0)] = 255
-    cv2.imwrite("../data/edges.png", combined)
+    # cv2.imwrite("../data/edges.png", combined)
+    return combined
     # cv2.imshow("birds eye", combined)
     # cv2.waitKey(0)
 
-def sliding_window(img_path):
-    binary = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+def sliding_window(img):
+    binary = img.copy()
     assert binary is not None, "Could not load image"
 
     H, W = binary.shape
@@ -150,8 +153,7 @@ def sliding_window(img_path):
 
     return leftx, lefty, rightx, righty, out_img
 
-def polynomial_fit(t_matrix):
-    leftx, lefty, rightx, righty, out_img = sliding_window("../data/edges.png")
+def polynomial_fit(inverse_matrix, leftx, lefty, rightx, righty, out_img):
     lp = np.polyfit(lefty, leftx, 2)
     rp = np.polyfit(righty, rightx, 2)
     ploty = np.linspace(0, out_img.shape[0] - 1, out_img.shape[0])
@@ -168,15 +170,14 @@ def polynomial_fit(t_matrix):
     cv2.polylines(out_img, [ptsL], isClosed=False, color=(255,0,0), thickness=6, lineType=cv2.LINE_AA)
     cv2.polylines(out_img, [ptsR], isClosed=False, color=(255,0,0), thickness=6, lineType=cv2.LINE_AA)
 
-    cv2.imwrite("../data/polynomial_fit.png", out_img)
+    # cv2.imwrite("../data/polynomial_fit.png", out_img)
 
     # img_size = (out_img.shape[1], out_img.shape[0])
-    # reverse_warp = cv2.warpPerspective(out_img, t_matrix, img_size)
+    # reverse_warp = cv2.warpPerspective(out_img, inverse_matrix, img_size)
     # cv2.imwrite("../data/lane_fit.png", reverse_warp)
-    return left_coords, right_coords, out_img, t_matrix, ploty
+    return left_coords, right_coords, out_img, inverse_matrix, ploty
 
-def drawPolygon(og_matrix):
-    left_coords, right_coords, out_img, t_matrix, ploty = polynomial_fit(og_matrix)
+def drawPolygon(left_coords, right_coords, out_img, inverse_matrix):
     img_size = (out_img.shape[1], out_img.shape[0])
     lane_mask = np.zeros_like(out_img)
     left_pts = left_coords.transpose()
@@ -186,16 +187,12 @@ def drawPolygon(og_matrix):
     pts = pts.astype(np.int32)
     pts = pts.reshape((-1, 1, 2))
     cv2.fillPoly(lane_mask, [pts], (255, 0, 0))
-    reverse_warp = cv2.warpPerspective(lane_mask, t_matrix, img_size)
-    # cv2.imwrite("../data/lane_fit.png", reverse_warp)
-    cv2.imwrite("../data/polygon.png", reverse_warp)
+    reverse_warp = cv2.warpPerspective(lane_mask, inverse_matrix, img_size)
+    # cv2.imwrite("../data/polygon.png", reverse_warp)
+    return reverse_warp
 
 
-def overlay():
-    lanes = cv2.imread("../data/polygon.png")
-    og_img = cv2.imread("../data/lane5.png")
-    og_img = cv2.resize(og_img, (960, 540))
-
+def overlay(og_img, lanes):
     lanes_hsv = cv2.cvtColor(lanes, cv2.COLOR_BGR2HSV)
     lower_blue = np.array([100, 150, 50])
     upper_blue = np.array([130, 255, 255])
@@ -205,17 +202,23 @@ def overlay():
     ys, xs = replace
     overlay = og_img.copy()
     overlay[ys,xs] = (255,0,0)
-    cv2.imwrite("../data/lane_final.png", overlay)
-    # cv2.imshow("lanes", overlay)
-    # cv2.waitKey(0)
+    return overlay
+    # cv2.imwrite("../data/lane_final.png", overlay)
 
-_,_, t_matrix = perspective_warp("../data/lane5.png")
-edge_detection("../data/birds_eye.png")
-drawPolygon(t_matrix)
-overlay()
-# leftx, lefty, rightx, righty, ans = sliding_window("../data/edges.png")
+def execute(frame, t_matrix, inverse_t):
+    birds_eye = perspective_warp(t_matrix, frame)
+    edges = edge_detection(birds_eye)
+    leftx, lefty, rightx, righty, out_img = sliding_window(edges)
+    left_coords, right_coords, out_img, inverse_matrix, ploty= polynomial_fit(inverse_t, leftx, lefty, rightx, righty, out_img)
+    lanes = drawPolygon(left_coords, right_coords, out_img, inverse_matrix)
+    return overlay(frame, lanes)
 
-# cv2.imshow("sliding window", ans)
-# cv2.waitKey(0)
 
-# perspective_warp("../data/lane3.png")
+# execute()
+
+
+
+# _,_, t_matrix = perspective_warp("../data/lane5.png")
+# edge_detection("../data/birds_eye.png")
+# drawPolygon(t_matrix)
+# overlay()
