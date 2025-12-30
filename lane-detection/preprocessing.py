@@ -170,12 +170,29 @@ def polynomial_fit(t_matrix):
 
     cv2.imwrite("../data/polynomial_fit.png", out_img)
 
+    # img_size = (out_img.shape[1], out_img.shape[0])
+    # reverse_warp = cv2.warpPerspective(out_img, t_matrix, img_size)
+    # cv2.imwrite("../data/lane_fit.png", reverse_warp)
+    return left_coords, right_coords, out_img, t_matrix, ploty
+
+def drawPolygon(og_matrix):
+    left_coords, right_coords, out_img, t_matrix, ploty = polynomial_fit(og_matrix)
     img_size = (out_img.shape[1], out_img.shape[0])
-    reverse_warp = cv2.warpPerspective(out_img, t_matrix, img_size)
-    cv2.imwrite("../data/lane_fit.png", reverse_warp)
+    lane_mask = np.zeros_like(out_img)
+    left_pts = left_coords.transpose()
+    right_pts = right_coords.transpose()
+    right_pts = right_pts[::-1]
+    pts = np.vstack((left_pts, right_pts))
+    pts = pts.astype(np.int32)
+    pts = pts.reshape((-1, 1, 2))
+    cv2.fillPoly(lane_mask, [pts], (255, 0, 0))
+    reverse_warp = cv2.warpPerspective(lane_mask, t_matrix, img_size)
+    # cv2.imwrite("../data/lane_fit.png", reverse_warp)
+    cv2.imwrite("../data/polygon.png", reverse_warp)
+
 
 def overlay():
-    lanes = cv2.imread("../data/lane_fit.png")
+    lanes = cv2.imread("../data/polygon.png")
     og_img = cv2.imread("../data/lane5.png")
     og_img = cv2.resize(og_img, (960, 540))
 
@@ -194,7 +211,7 @@ def overlay():
 
 _,_, t_matrix = perspective_warp("../data/lane5.png")
 edge_detection("../data/birds_eye.png")
-polynomial_fit(t_matrix)
+drawPolygon(t_matrix)
 overlay()
 # leftx, lefty, rightx, righty, ans = sliding_window("../data/edges.png")
 
