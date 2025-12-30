@@ -2,8 +2,8 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
-def perspective_warp(img):
-    img = cv2.resize(img, (960, 540))
+
+def homography_matrix(img):
     src = np.float32([
         (0.41, 0.65),  # top-left
         (0.19, 0.9),  # bottom-left
@@ -23,16 +23,20 @@ def perspective_warp(img):
         [img_size[0], img_size[1]]
     ])
     t_matrix = cv2.getPerspectiveTransform(src, dst)
+    inverse_t = cv2.getPerspectiveTransform(dst, src)
+    return t_matrix, inverse_t
+
+def perspective_warp(t_matrix, img):
+    img_size = np.float32([(img.shape[1],img.shape[0])])
+    img_size = (int(img_size[0][0]), int(img_size[0][1]))
     birds_eye = cv2.warpPerspective(img, t_matrix, img_size)
     # cv2.imwrite("../data/birds_eye.png", birds_eye)
-
-    inverse_t = cv2.getPerspectiveTransform(dst, src)
     # cv2.imwrite("../data/coords.png", img)
     # cv2.imshow("test", img)
     # cv2.imshow("birds eye", birds_eye)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
-    return birds_eye, t_matrix, inverse_t
+    return birds_eye
 
 def edge_detection(img):
     birds_eye = img.copy()
@@ -189,8 +193,6 @@ def drawPolygon(left_coords, right_coords, out_img, inverse_matrix):
 
 
 def overlay(og_img, lanes):
-    og_img = cv2.resize(og_img, (960, 540))
-
     lanes_hsv = cv2.cvtColor(lanes, cv2.COLOR_BGR2HSV)
     lower_blue = np.array([100, 150, 50])
     upper_blue = np.array([130, 255, 255])
@@ -203,13 +205,13 @@ def overlay(og_img, lanes):
     return overlay
     # cv2.imwrite("../data/lane_final.png", overlay)
 
-def execute(frame):
-    birds_eye, t_matrix, inverse_t = perspective_warp(frame)
+def execute(frame, t_matrix, inverse_t):
+    birds_eye = perspective_warp(t_matrix, frame)
     edges = edge_detection(birds_eye)
     leftx, lefty, rightx, righty, out_img = sliding_window(edges)
     left_coords, right_coords, out_img, inverse_matrix, ploty= polynomial_fit(inverse_t, leftx, lefty, rightx, righty, out_img)
     lanes = drawPolygon(left_coords, right_coords, out_img, inverse_matrix)
-    overlay(frame, lanes)
+    return overlay(frame, lanes)
 
 
 # execute()
