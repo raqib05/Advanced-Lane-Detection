@@ -3,6 +3,7 @@
 A **classical computer vision–based lane detection pipeline** for road images and videos, inspired by autonomous driving perception systems.  
 This project performs **lane detection, polynomial fitting, bird’s-eye transformation, and inverse projection** using OpenCV and NumPy — without deep learning.
 
+Depth detection will be implemented in the future
 ---
 
 ## 📌 Features
@@ -49,10 +50,10 @@ This project performs **lane detection, polynomial fitting, bird’s-eye transfo
 ---
 
 ## Note:
-    - The values for src and dst matrices in homography_matrix() function depends on the camera position, so the current values may not produce optimal results for another dashcam. Feel free to play around with the values to get optimal results if another dashcam footage is being used. Commented lines 15-16 are useful if you want to see the specific coordinates you are transforming. The coords image in the data folder shows how the coordinates look for this particular dashcam, you should aim for something very close to this.
+   - The values for src and dst matrices in homography_matrix() function depends on the camera position, so the current values may not produce optimal results for another dashcam. Feel free to play around with the values to get optimal results if another dashcam footage is being used. Commented lines 15-16 are useful if you want to see the specific coordinates you are transforming. The coords image in the data folder shows how the coordinates look for this particular dashcam, you should aim for something very close to this.
 
 ## Future Work/Improvements
-    - Implement a depth detection system, where it can identify obstacles and other car in front and calculate how far away they are
-    - Make the lane polygon transparent for better visuals
-    - Use this vision pipeline to implement a fully autonomous robot/car in ROS2
+   1. Implement a depth detection system, where it can identify obstacles and other car in front and calculate how far away they are
+   2. Make the lane polygon transparent for better visuals
+   3. Use this vision pipeline to implement a fully autonomous robot/car in ROS2
     
