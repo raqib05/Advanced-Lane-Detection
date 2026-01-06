@@ -3,7 +3,6 @@
 A **classical computer vision–based lane detection pipeline** for road images and videos, inspired by autonomous driving perception systems.  
 This project performs **lane detection, polynomial fitting, bird’s-eye transformation, and inverse projection** using OpenCV and NumPy — without deep learning.
 
-Depth detection will be implemented in the future
 ---
 
 ## 📌 Features
@@ -54,7 +53,7 @@ Depth detection will be implemented in the future
 
 ## 🔮 Future Work/Improvements
    1. Intregrating ML for improved robustness and performance in more complex real-world scenarios
-   2. Implement a depth detection system, where it can identify obstacles and other car in front and calculate how far away they are
+   2. Focus on detecting lanes in snowy and difficult weather conditions
    3. Make the lane polygon transparent for better visuals
    4. Use this vision pipeline to implement a fully autonomous robot/car in ROS2
     
