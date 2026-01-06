@@ -53,7 +53,8 @@ Depth detection will be implemented in the future
    - The values for src and dst matrices in homography_matrix() function depends on the camera position, so the current values may not produce optimal results for another dashcam. Feel free to play around with the values to get optimal results if another dashcam footage is being used. Commented lines 15-16 are useful if you want to see the specific coordinates you are transforming. The coords image in the data folder shows how the coordinates look for this particular dashcam, you should aim for something very close to this.
 
 ## Future Work/Improvements
-   1. Implement a depth detection system, where it can identify obstacles and other car in front and calculate how far away they are
-   2. Make the lane polygon transparent for better visuals
-   3. Use this vision pipeline to implement a fully autonomous robot/car in ROS2
+   1. Intregrating ML for improved robustness and performance in more complex real-world scenarios
+   2. Implement a depth detection system, where it can identify obstacles and other car in front and calculate how far away they are
+   3. Make the lane polygon transparent for better visuals
+   4. Use this vision pipeline to implement a fully autonomous robot/car in ROS2
     
